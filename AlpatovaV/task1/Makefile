@@ -1,8 +1,8 @@
 build:
-	gcc -o getopt_ex getopt_ex.c
+	gcc -o task1 task1.c
 
 run: build
-	./getopt_ex
+	./task1
 
 clean:
-	rm -f getopt_ex
+	rm -f task1

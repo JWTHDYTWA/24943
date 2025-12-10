@@ -1,8 +1,8 @@
 build:
-	gcc -o ex_time ex_time.c
+	gcc -o task2 task2.c
 
 run: build
-	./ex_time
+	./task2
 
 clean:
-	rm -f ex_time
+	rm -f task2

@@ -1,52 +1,19 @@
-<<<<<<< HEAD
-# Временные файлы редакторов
+# Временные файлы
+.nfs*
 *.swp
 *.swo
 *~
-.*.swp
+.DS_Store
+Thumbs.db
 
-# Исполняемые файлы
-*.exe
+# Бинарники и объекты
+*.o
+*.a
+*.so
 *.out
+*.exe
+
+# Папки сборки
 /bin/
 /obj/
-
-# Резервные копии
-*.bak
-*.tmp
-
-# Системные файлы
-.DS_Store
-Thumbs.db
-
-# Файлы сборки
-*.o
-*.a
-*.so
-=======
-.DS_Store
-Thumbs.db
-desktop.ini
-
-*.log
-
-*.o
-*.obj
-*.a
-*.lib
-*.so
-*.dll
-
-/*
-!/.*
-!*.*
-
-.vscode/
-.idea/
-*.swo
-*.swp
-*~
-
-build/
-bin/
->>>>>>> 8016ba8dc8766cc0c31e918b3a704d69af92f218
+/build/

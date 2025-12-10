@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "unistd.h": "c",
-        "time.h": "c"
-    },
-    "C_Cpp.default.cppStandard": "gnu++17",
-    "C_Cpp.default.cStandard": "gnu17"
-}
