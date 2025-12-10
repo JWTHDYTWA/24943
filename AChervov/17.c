@@ -20,7 +20,6 @@ const char *backsp = "\b \b";
 
 struct termios term;
 struct termios term_bak;
-int restore_bak = 0;
 
 char buf[41];
 int pos = 0;
@@ -30,41 +29,78 @@ int last_wd_len = 0;
 
 void restore_term()
 {
-    if (restore_bak)
-    {
-        tcsetattr(0, TCSAFLUSH, &term_bak);
-    }
+    tcsetattr(0, TCSAFLUSH, &term_bak);
 }
 
 void init_term(int fd)
 {
     tcgetattr(fd, &term);
     term_bak = term;
-    restore_bak = 1;
+    atexit(restore_term);
     term.c_lflag &= ~(ECHO|ICANON);
+    term.c_cc[VMIN] = 1;
+    term.c_cc[VTIME] = 0;
     tcsetattr(fd, TCSAFLUSH, &term);
 }
 
 void write_printable(char c)
 {
-    buf[pos++] = c;
-    buf[pos] = '\0';
-    if (c == ' ')
+    if (pos > 39)
     {
-        last_wd_len = 0;
+        if (last_wd_len < 40)
+        {
+            while (pos > 0 && buf[pos - 1] != ' ')
+            {
+                stack[s_pos++] = buf[--pos];
+                write(STDOUT_FILENO, backsp, 3);
+            }
+            write(STDOUT_FILENO, &endl, 1);
+            pos = 0;
+            while (s_pos > 0)
+            {
+                write(STDOUT_FILENO, &stack[s_pos - 1], 1);
+                buf[pos++] = stack[--s_pos];
+            }
+            buf[pos++] = c;
+            buf[pos] = '\0';
+            last_wd_len++;
+            write(STDOUT_FILENO, &c, 1);
+        }
+        else
+        {
+            write(STDOUT_FILENO, &ctrl_g, 1);
+        }
     }
     else
     {
-        last_wd_len++;
+        buf[pos++] = c;
+        buf[pos] = '\0';
+        if (c == ' ')
+        {
+            last_wd_len = 0;
+        }
+        else
+        {
+            last_wd_len++;
+        }
+        write(STDOUT_FILENO, &c, 1);
     }
-    write(STDOUT_FILENO, &c, 1);
+}
+
+void recalc_wd_len()
+{
+    last_wd_len = 0;
+    int temp_pos = pos;
+    while (temp_pos > 0 && buf[temp_pos - 1] != ' ')
+    {
+        last_wd_len++;
+        temp_pos--;
+    }
 }
 
 int main(int argc, char const *argv[])
 {
     init_term(STDIN_FILENO);
-    atexit(restore_term);
-
     
     while (1)
     {
@@ -77,8 +113,8 @@ int main(int argc, char const *argv[])
             if (pos > 0)
             {
                 buf[--pos] = '\0';
+                recalc_wd_len();
                 write(STDOUT_FILENO, backsp, 3);
-                last_wd_len--;
             }
         }
         else if (rc == term.c_cc[VKILL])
@@ -124,40 +160,12 @@ int main(int argc, char const *argv[])
         else if (rc == '\n')
         {
             write(STDOUT_FILENO, &endl, 1);
+            last_wd_len = 0;
             pos = 0;
         }
         else if (isprint(rc))
         {
-            if (pos > 39)
-            {
-                if (last_wd_len < 40)
-                {
-                    while (pos > 0 && buf[pos - 1] != ' ')
-                    {
-                        stack[s_pos++] = buf[--pos];
-                        write(STDOUT_FILENO, backsp, 3);
-                    }
-                    write(STDOUT_FILENO, &endl, 1);
-                    pos = 0;
-                    while (s_pos > 0)
-                    {
-                        write(STDOUT_FILENO, &stack[s_pos - 1], 1);
-                        buf[pos++] = stack[--s_pos];
-                    }
-                    buf[pos++] = rc;
-                    buf[pos] = '\0';
-                    last_wd_len++;
-                    write(STDOUT_FILENO, &rc, 1);
-                }
-                else
-                {
-                    write(STDOUT_FILENO, &ctrl_g, 1);
-                }
-            }
-            else
-            {
-                write_printable(rc);
-            }
+            write_printable(rc);
         }
         else
         {
