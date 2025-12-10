@@ -44,6 +44,21 @@ void init_term(int fd)
     tcsetattr(fd, TCSAFLUSH, &term);
 }
 
+void write_printable(char c)
+{
+    buf[pos++] = c;
+    buf[pos] = '\0';
+    if (c == ' ')
+    {
+        last_wd_len = 0;
+    }
+    else
+    {
+        last_wd_len++;
+    }
+    write(STDOUT_FILENO, &c, 1);
+}
+
 int main(int argc, char const *argv[])
 {
     init_term(STDIN_FILENO);
@@ -88,6 +103,28 @@ int main(int argc, char const *argv[])
             }
             last_wd_len = 0;
         }
+        else if (rc == '\033')
+        {
+            write(STDOUT_FILENO, &ctrl_g, 1);
+            read(STDIN_FILENO, &rc, 1);
+            if (rc == '[')
+            {
+                read(STDIN_FILENO, &rc, 1);
+                if (rc >= '0' && rc <= '9')
+                {
+                    read(STDIN_FILENO, &rc, 1);
+                }
+            }
+            else
+            {
+                write_printable(rc);
+            }
+        }
+        else if (rc == '\n')
+        {
+            write(STDOUT_FILENO, &endl, 1);
+            pos = 0;
+        }
         else if (isprint(rc))
         {
             if (pos > 39)
@@ -118,17 +155,7 @@ int main(int argc, char const *argv[])
             }
             else
             {
-                buf[pos++] = rc;
-                buf[pos] = '\0';
-                if (rc == ' ')
-                {
-                    last_wd_len = 0;
-                }
-                else
-                {
-                    last_wd_len++;
-                }
-                write(STDOUT_FILENO, &rc, 1);
+                write_printable(rc);
             }
         }
         else
