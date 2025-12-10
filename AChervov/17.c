@@ -1,10 +1,11 @@
-#include <termios.h>  // Управление терминалом (struct termios, константы)
-#include <unistd.h>   // Системные вызовы ввода-вывода (read, write)
-#include <stdio.h>    // Стандартный ввод-вывод (printf, putchar - если нужно, но лучше write)
-#include <stdlib.h>   // exit, atexit
-#include <ctype.h>    // Проверка типов символов (isprint, isspace)
-#include <string.h>   // Работа со строками (для буфера)
+#include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
+// I left it for the case if I'd have to make multi-line edit.
 // struct line
 // {
 //     char buffer[41];
