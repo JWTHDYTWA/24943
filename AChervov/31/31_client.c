@@ -41,16 +41,13 @@ int main(int argc, char const *argv[])
     assert_noerr(ret, "Couldn't connect to a socket.\n");
 
     char buf[64];
-    while (1)
+    while (fgets(buf, sizeof(buf), stdin) != NULL)
     {
-        scanf("%s", buf);
-        if (strlen(buf) == 0)
-        {
-            close(soc);
-            break;
-        }
+        if (buf[0] == '\n')
+            continue;
         write(soc, buf, strlen(buf));
     }
-    
+    close(soc);
+
     return 0;
 }

@@ -32,6 +32,8 @@ void exit_handler()
 
 int main(int argc, char const *argv[])
 {
+    atexit(exit_handler);
+    signal(SIGINT, exit);
 
     int ret;
     serv_sock = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -69,18 +71,37 @@ int main(int argc, char const *argv[])
             {
                 if (fds[i].fd == serv_sock)
                 {
-                    int new_client = accept(serv_sock, (struct sockaddr*)&addr, &addr_s);
-                    assert_noerr(new_client, "Accept new client error.");
-                    if (new_client == -1) continue;
-                    fds[fds_cnt].fd = new_client;
-                    fds[fds_cnt].events = POLLIN;
-                    fds_cnt++;
+                    if (fds_cnt < 10)
+                    {
+                        int new_client = accept(serv_sock, (struct sockaddr *)&addr, &addr_s);
+                        assert_noerr(new_client, "Accept new client error.");
+                        if (new_client >= 0)
+                        {
+                            fds[fds_cnt].fd = new_client;
+                            fds[fds_cnt].events = POLLIN;
+                            fds_cnt++;
+                        }
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Too many clients\n");
+                    }
                 }
                 else
                 {
-                    read(fds[i].fd, &buf, 1);
-                    buf = toupper(buf);
-                    write(STDOUT_FILENO, &buf, 1);
+                    ssize_t count = read(fds[i].fd, &buf, 1);
+                    if (count <= 0)
+                    {
+                        close(fds[i].fd);
+                        fds[i] = fds[fds_cnt - 1];
+                        fds_cnt--;
+                        i--;
+                    }
+                    else
+                    {
+                        buf = toupper(buf);
+                        write(STDOUT_FILENO, &buf, 1);
+                    }
                 }
             }
         }
