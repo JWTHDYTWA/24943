@@ -1,6 +1,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
+#include <sys/ioctl.h>
+#include <sys/filio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -20,16 +22,20 @@ int clients_cnt = 0;
 
 void make_async(int fd)
 {
-    if (fcntl(fd, F_SETOWN, getpid()) < 0)
-    {
-        perror("`fcntl` F_SETOWN");
+    if (fcntl(fd, F_SETOWN, getpid()) < 0) {
+        perror("fcntl F_SETOWN");
         exit(1);
     }
 
     int flags = fcntl(fd, F_GETFL);
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK | O_ASYNC) < 0)
-    {
-        perror("`fcntl` F_SETFL");
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        perror("fcntl F_SETFL");
+        exit(1);
+    }
+
+    int on = 1;
+    if (ioctl(fd, FIOASYNC, &on) < 0) {
+        perror("ioctl FIOASYNC");
         exit(1);
     }
 }
